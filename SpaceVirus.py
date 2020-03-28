@@ -1,5 +1,8 @@
 import pygame
 import random
+import time
+from multiprocessing import Process
+
 pygame.init()
 
 #game screen
@@ -28,17 +31,20 @@ enemy_y = random.randint(50,400)
 enemy_x_change = 1
 
 #bullet
-bullet_img = pygame.image.load("resources/icons/spaceship.png")
-bullet_x = random.randint(0,750)
-bullet_y = random.randint(50,400)
-bullet_y_change = 0.1
+bullet_img = pygame.image.load("resources/icons/bullet.png")
+bullet_x = 0
+bullet_y = player_y
+bullet_y_change = 3
 bullet_state = "ready"
 
 def fire_bullet(x,y):
     global bullet_state
     bullet_state = "fire"
+    x += 20
+    y -= 32
+    print('bullet x y', x, y)
     screen.blit(bullet_img, (x ,y))
-
+        
 def player(x, y):
     screen.blit(player_img, (x, y))
 
@@ -48,7 +54,7 @@ def enemy(x, y):
 #game loop
 while running:
     screen.fill((0, 0, 0))
-    #screen.blit(background, (0, 0))
+    screen.blit(background, (0, 0))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -69,7 +75,11 @@ while running:
                 player_y_change +=3
             if event.key == pygame.K_SPACE:
                 print('Space is hit')
-                fire_bullet(player_x, player_y)
+                bullet_x = player_x
+                fire_bullet(bullet_x, player_y)
+                # fire_proc =  Process(target=fire_bullet(player_x, player_y)) 
+                # fire_proc.start()
+                # fire_proc.join()
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or  event.key == pygame.K_UP or  event.key == pygame.K_DOWN:
@@ -100,29 +110,17 @@ while running:
     if enemy_x >= 750:
         enemy_x_change = -1
 
-
-    # s
-    # if event.type == pygame.KEYDOWN:
-    #     if event.key == pygame.K_SPACE:
-    #         print('Space is hit')
-    #         fire_bullet(player_x, player_y-30)
-    #bullet movement
-    fire_bullet(player_x, player_y)
-    if bullet_state is "fire":
-        fire_bullet(player_x, player_y)
-        bullet_y -= bullet_y_change 
-
-
     
+    ########
+    if bullet_y <= 0:
+        bullet_y = player_y
+        bullet_state = "ready"
+    
+    if bullet_state == "fire":
+        fire_bullet(bullet_x, bullet_y)
+        bullet_y -= bullet_y_change
+
     player(player_x,player_y)
-
-    fire_bullet(player_x, player_y-32)
-    player_x_temp = player_x
-    player_y_temp = player_y -32
-    if bullet_state is "fire":
-        fire_bullet(player_x_temp, player_y_temp)
-        player_y_temp -= bullet_y_change 
-
     enemy(enemy_x,enemy_y)
     
     pygame.display.update()
